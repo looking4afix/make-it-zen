@@ -97,9 +97,9 @@ function injectedToast(text, duration) {
 
 async function flashBadge(tabId, text, color) {
   try {
-    await browser.action.setBadgeBackgroundColor({ color, tabId });
-    await browser.action.setBadgeText({ text, tabId });
-    setTimeout(() => browser.action.setBadgeText({ text: null, tabId }).catch(() => {}), 1500);
+    await browser.browserAction.setBadgeBackgroundColor({ color, tabId });
+    await browser.browserAction.setBadgeText({ text, tabId });
+    setTimeout(() => browser.browserAction.setBadgeText({ text: null, tabId }).catch(() => {}), 1500);
   } catch (_) {
     // Tab may be gone; nothing to do.
   }
@@ -120,10 +120,8 @@ browser.commands.onCommand.addListener(async (command, tab) => {
   }
 
   try {
-    await browser.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: injectedToast,
-      args: [browser.i18n.getMessage("toastCopied"), 1600],
+    await browser.tabs.executeScript(tab.id, {
+      code: `(${injectedToast.toString()})(${JSON.stringify(browser.i18n.getMessage("toastCopied"))}, 1600);`,
     });
   } catch (_) {
     // Restricted page (about:, addons.mozilla.org, PDF viewer, new tab...).
@@ -132,13 +130,28 @@ browser.commands.onCommand.addListener(async (command, tab) => {
 });
 
 /* ------------------------------------------------------------------ *
- * Glance: per-tab state (kept in storage.session so it survives the
- * background page being suspended)
+ * Glance: per-tab state (kept in memory: the background page is persistent)
  *
  *   { open, at, pending, frames: { [frameId]: lastUrl } }
  * ------------------------------------------------------------------ */
 
-const session = browser.storage.session;
+// Same get/set/remove shape as browser.storage.session, backed by a plain object.
+const sessionData = {};
+const session = {
+  async get(keys) {
+    const out = {};
+    for (const k of typeof keys === "string" ? [keys] : Object.keys(keys || {})) {
+      if (k in sessionData) out[k] = JSON.parse(JSON.stringify(sessionData[k]));
+    }
+    return out;
+  },
+  async set(obj) {
+    for (const [k, v] of Object.entries(obj)) sessionData[k] = JSON.parse(JSON.stringify(v));
+  },
+  async remove(k) {
+    delete sessionData[k];
+  },
+};
 const stateKey = (tabId) => `glance:${tabId}`;
 const STALE_MS = 60 * 60 * 1000;
 const FRESH_MS = 15 * 1000;
@@ -177,8 +190,38 @@ function isHttpUrl(u) {
 const sendToTop = (tabId, message) =>
   browser.tabs.sendMessage(tabId, message, { frameId: 0 }).catch(() => {});
 
+// Drops the headers that forbid framing: X-Frame-Options, and any CSP that carries
+// frame-ancestors (Firefox merges an extension-rewritten CSP with the original one and
+// enforces the stricter result, so the whole header has to go; CSPs without
+// frame-ancestors are left alone).
+function stripFraming(headers) {
+  const removed = [];
+  const responseHeaders = [];
+  for (const h of headers || []) {
+    const name = h.name.toLowerCase();
+    if (name === "x-frame-options") {
+      removed.push(name);
+      continue;
+    }
+    if (
+      (name === "content-security-policy" || name === "content-security-policy-report-only") &&
+      /(^|;)\s*frame-ancestors\b/i.test(h.value || "")
+    ) {
+      removed.push(`${name}(frame-ancestors)`);
+      continue;
+    }
+    responseHeaders.push(h);
+  }
+  return { responseHeaders, removed };
+}
+
 async function onHeadersReceived(details) {
-  if (details.tabId < 0) return {};
+  if (details.tabId < 0) {
+    if (!glanceWantsBackground(details.url)) return {};
+    const { responseHeaders, removed } = stripFraming(details.responseHeaders);
+    log("glance (service worker) frame", details.url, "removed:", removed);
+    return removed.length ? { responseHeaders } : {};
+  }
 
   const st = await getState(details.tabId);
   if (!st.open) return {};
@@ -211,25 +254,7 @@ async function onHeadersReceived(details) {
   }
   if (dirty) await setState(details.tabId, st);
 
-  const removed = [];
-  const responseHeaders = [];
-  for (const h of details.responseHeaders || []) {
-    const name = h.name.toLowerCase();
-    if (name === "x-frame-options") {
-      removed.push(name);
-      continue;
-    }
-    if (name === "content-security-policy" || name === "content-security-policy-report-only") {
-      // Firefox merges an extension-rewritten CSP with the original one (the stricter
-      // result wins), so frame-ancestors can only be lifted by removing the whole header.
-      // Policies without frame-ancestors are left alone.
-      if (/(^|;)\s*frame-ancestors\b/i.test(h.value || "")) {
-        removed.push(`${name}(frame-ancestors)`);
-        continue;
-      }
-    }
-    responseHeaders.push(h);
-  }
+  const { responseHeaders, removed } = stripFraming(details.responseHeaders);
   log("glance frame", details.frameId, details.url, "status", details.statusCode, "removed:", removed);
   return { responseHeaders };
 }
@@ -239,6 +264,24 @@ browser.webRequest.onHeadersReceived.addListener(
   { urls: ["<all_urls>"], types: ["sub_frame"] },
   ["blocking", "responseHeaders"]
 );
+
+/*
+ * Sites with a service worker (YouTube, ...) answer the iframe's navigation through it:
+ * the response then comes from a fetch the worker makes itself, which has no tab
+ * (tabId -1). Those responses are matched by the host the open Glance is loading.
+ */
+function glanceWantsBackground(url) {
+  const host = hostOf(url);
+  if (!host) return false;
+  const now = Date.now();
+  for (const [k, st] of Object.entries(sessionData)) {
+    if (!k.startsWith("glance:") || !st || !st.open) continue;
+    if (now - st.at > 2 * FRESH_MS) continue; // refreshed by every link followed inside Glance
+    const urls = [st.pending, ...Object.values(st.frames || {})];
+    if (urls.some((u) => u && hostOf(u) === host)) return true;
+  }
+  return false;
+}
 
 // A network-level failure of the Glance frame (framing refused, DNS, TLS...).
 async function onErrorOccurred(details) {
@@ -270,7 +313,7 @@ browser.webRequest.onErrorOccurred.addListener(onErrorOccurred, {
 /* ------------------------------------------------------------------ *
  * Media players (shown in the sidebar)
  *
- * Content scripts push snapshots; the map is mirrored to storage.session so
+ * Content scripts push snapshots; the map is mirrored to the in-memory session so
  * it survives the background page being suspended.
  * ------------------------------------------------------------------ */
 
@@ -309,8 +352,8 @@ const notifySidebar = (msg) => browser.runtime.sendMessage(msg).catch(() => {});
 async function updateBadge() {
   const playing = [...players.values()].some((p) => !p.paused);
   try {
-    await browser.action.setBadgeText({ text: playing ? "\u266a" : "" });
-    if (playing) await browser.action.setBadgeBackgroundColor({ color: "#5b4bdb" });
+    await browser.browserAction.setBadgeText({ text: playing ? "\u266a" : "" });
+    if (playing) await browser.browserAction.setBadgeBackgroundColor({ color: "#5b4bdb" });
   } catch (_) {
     // ignore
   }
@@ -413,13 +456,10 @@ browser.tabs.onRemoved.addListener((tabId) => {
 
 async function handleMessage(msg, sender) {
   const tab = sender.tab;
+  log("message", msg && msg.type, "tab", tab && tab.id);
 
   // From the sidebar page (an extension page, so no tab).
   if (!tab) {
-    if (msg.type === "debug") {
-      log("content", msg.where, ...(msg.args || []));
-      return undefined;
-    }
     if (msg.type === "media-list") return mediaList();
     if (msg.type === "media-control") return mediaControl(msg);
     return undefined;
@@ -448,6 +488,15 @@ async function handleMessage(msg, sender) {
       return { ok: true };
     }
 
+    case "glance-nav": {
+      // A link followed inside the Glance frame: tell the top frame (see glance.js).
+      if (!isHttpUrl(msg.url)) return undefined;
+      const st = await getState(tab.id);
+      if (st.open) await setState(tab.id, { ...st, pending: msg.url, at: Date.now() });
+      await sendToTop(tab.id, { type: "glance-nav", url: msg.url });
+      return undefined;
+    }
+
     case "glance-escape": {
       // Relayed from the (named) Glance frame when it has keyboard/mouse focus.
       await sendToTop(tab.id, { type: "glance-close-request" });
@@ -458,7 +507,11 @@ async function handleMessage(msg, sender) {
       const st = await getState(tab.id);
       const known = Object.values(st.frames);
       const url = known.length ? known[known.length - 1] : msg.url;
-      if (!isHttpUrl(url)) return { ok: false };
+      if (!isHttpUrl(url)) {
+        log("glance-expand refused", url);
+        return { ok: false };
+      }
+      log("glance-expand opening", url);
       await browser.tabs.create({
         url,
         active: true,
@@ -469,13 +522,7 @@ async function handleMessage(msg, sender) {
       return { ok: true };
     }
 
-    case "debug": {
-      log("content", `tab ${tab.id} opener=${tab.openerTabId}`, msg.where, ...(msg.args || []));
-      return undefined;
-    }
-
     case "opener-check": {
-      log("opener-check", `tab ${tab.id} openerTabId=${tab.openerTabId}`, tab.url);
       // Only tabs that were opened from another tab (link, window.open...) qualify.
       if (typeof tab.openerTabId !== "number") return { eligible: false };
       try {

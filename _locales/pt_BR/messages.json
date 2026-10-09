@@ -112,5 +112,14 @@
   },
   "playersTitle": {
     "message": "Players"
+  },
+  "blockedCspTitle": {
+    "message": "Esta página não permite pré-visualizações"
+  },
+  "blockedCspText": {
+    "message": "A política de segurança (CSP) dela impede que outros sites abram dentro dela. Abra o link em uma nova aba."
+  },
+  "blockedCspOpenTab": {
+    "message": "Abrir em nova aba"
   }
 }

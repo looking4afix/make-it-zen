@@ -42,7 +42,8 @@ body {
 .title { font-weight: 650; }
 .sub { color: var(--muted); }
 
-/* Ticker: long text scrolls left in a seamless loop, only while it does not fit. */
+/* Ticker: long text scrolls left in a seamless loop, only while it does not fit and
+   only while the pointer is over it; leaving it snaps the text back to the start. */
 .tick { overflow: hidden; white-space: nowrap; }
 .tick .track { display: inline-flex; width: max-content; gap: 36px; }
 .tick .track > span { flex: none; }
@@ -52,10 +53,10 @@ body {
   mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
 }
 .tick.run .t2 { display: inline; }
-.tick.run .track { animation: zticker var(--dur, 10s) linear 1.5s infinite; }
+.tick.run:hover .track { animation: zticker var(--dur, 10s) linear 0.4s infinite; }
 @keyframes zticker { to { transform: translateX(calc(-1 * var(--dist))); } }
 @media (prefers-reduced-motion: reduce) {
-  .tick.run .track { animation: none; }
+  .tick.run:hover .track { animation: none; }
   .tick.run .t2 { display: none; }
 }
 .time { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }

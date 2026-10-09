@@ -22,6 +22,21 @@
   if (window !== window.top) {
     const relay = () => browser.runtime.sendMessage({ type: "glance-escape" }).catch(() => {});
 
+    // Links followed inside the Glance frame are announced to the top frame, which can
+    // then tell a navigation refused by the host page's CSP (frame-src) from a normal one.
+    if (isGlanceFrame()) {
+      window.addEventListener(
+        "click",
+        (e) => {
+          if (e.button !== 0) return;
+          const a = e.composedPath().find((n) => n && n.localName === "a" && n.hasAttribute("href"));
+          if (!a || typeof a.href !== "string" || !/^https?:/i.test(a.href)) return;
+          browser.runtime.sendMessage({ type: "glance-nav", url: a.href }).catch(() => {});
+        },
+        true
+      );
+    }
+
     document.addEventListener("keydown", (e) => {
       if (e.defaultPrevented || !isGlanceFrame()) return;
       if (e.key === "Escape" || isBackKey(e)) {
@@ -104,17 +119,11 @@
    *     tab and returns to the opener (Back would do nothing there anyway).
    * ---------------------------------------------------------------- */
 
-  const dbg = (...args) =>
-    browser.runtime
-      .sendMessage({ type: "debug", where: location.href.slice(0, 120), args: args.map(String) })
-      .catch(() => {});
-
   let openedFromTab = false;
   settingsReady
     .then(() => browser.runtime.sendMessage({ type: "opener-check" }))
     .then((res) => {
       openedFromTab = !!(res && res.eligible);
-      dbg("opener-check ->", JSON.stringify(res), "history.length=" + history.length);
     })
     .catch(() => {});
 
@@ -124,7 +133,6 @@
       if (!settings.backCloses || !isBackKey(e)) return;
       const glance = !!current;
       const tab = !glance && openedFromTab && history.length === 1;
-      dbg("back key:", "glance=" + glance, "openedTab=" + openedFromTab, "history.length=" + history.length, "-> " + (glance ? "close glance" : tab ? "close tab" : "ignored"));
       if (glance) {
         e.preventDefault();
         e.stopPropagation();
@@ -141,6 +149,35 @@
   /* ---------------------------------------------------------------- *
    * Overlay UI
    * ---------------------------------------------------------------- */
+
+  /* A link clicked inside the Glance frame and a frame-src violation reported by the host
+     page for the same origin, in either order, mean the host page's CSP refused it. */
+  const NAV_WINDOW_MS = 3000;
+  let navTry = null;
+  let lastViolation = null;
+
+  function originOf(u) {
+    try {
+      return new URL(u).origin;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function maybeBlockedNav() {
+    if (!current || !navTry || !lastViolation) return false;
+    if (Math.abs(navTry.at - lastViolation.at) > NAV_WINDOW_MS) return false;
+    if (!lastViolation.origin || lastViolation.origin !== originOf(navTry.url)) return false;
+    const url = navTry.url;
+    navTry = null;
+    lastViolation = null;
+    // Loads started by the extension itself are not held to the host page's CSP (the
+    // initial Glance load passes even where a click inside the frame is refused), so
+    // retry the same link through the iframe element. If that is refused too, ask.
+    current.retry = { url, at: Date.now() };
+    current.frame.src = url;
+    return true;
+  }
 
   const RING_R = 34;
   const RING_C = 2 * Math.PI * RING_R;
@@ -228,7 +265,12 @@
     .num { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; font-weight: 650; }
     .title { font-size: 16px; font-weight: 650; }
     .sub { color: var(--muted); font-size: 13px; }
-    .actions { display: flex; gap: 8px; margin-top: 6px; }
+    .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
+    .badge {
+      width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--field); color: var(--accent);
+    }
+    .badge svg { width: 30px; height: 30px; }
     .open .backdrop { opacity: 1; }
     .open .panel { opacity: 1; transform: none; }
     .closing .backdrop, .closing .panel { opacity: 0; }
@@ -272,6 +314,7 @@
     "M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5",
   ];
   const ICON_CLOSE = ["M6 6l12 12", "M18 6L6 18"];
+  const ICON_SHIELD = ["M12 3l8 3v6c0 4.5-3.2 8.2-8 9-4.8-.8-8-4.5-8-9V6l8-3z", "M12 8v5", "M12 16h.01"];
 
   function makeButton({ label, paths, text, className, onClick }) {
     const b = el("button", className || "");
@@ -379,9 +422,29 @@
     window.addEventListener("keydown", onKey, true);
 
     // The page's own CSP forbids framing: same card as a blocked site.
+    navTry = null;
+    lastViolation = null;
     const onCsp = (ev) => {
       if (!/^(frame-src|child-src)/.test(ev.effectiveDirective || "")) return;
       const blocked = ev.blockedURI || "";
+      // The retry itself was refused: nothing more to try silently.
+      if (
+        current &&
+        current.retry &&
+        Date.now() - current.retry.at < NAV_WINDOW_MS &&
+        originOf(blocked) === originOf(current.retry.url)
+      ) {
+        const refused = current.retry.url;
+        current.retry = null;
+        showBlocked(refused, { csp: true });
+        return;
+      }
+      // A link followed inside the Glance frame that the host page's CSP refuses.
+      lastViolation = { origin: originOf(blocked), at: Date.now() };
+      if (maybeBlockedNav()) return;
+      // Once the frame has shown a page, violations belong to navigations inside it
+      // (announced by the frame itself), not to the first load below.
+      if (current && current.sawUrl) return;
       let origin = "";
       try {
         origin = new URL(url).origin;
@@ -389,14 +452,14 @@
         // ignore
       }
       if (!blocked || !(url.startsWith(blocked) || blocked === origin)) return;
-      showBlocked(url);
+      showBlocked(url, { csp: true });
     };
     document.addEventListener("securitypolicyviolation", onCsp, true);
 
     const prevOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
 
-    current = { host, wrap, view, url, onKey, onCsp, prevOverflow, setUrl, timer: null, blocked: false };
+    current = { host, wrap, view, frame, url, onKey, onCsp, prevOverflow, setUrl, timer: null, blocked: false, retry: null, sawUrl: false };
     document.documentElement.appendChild(host);
     frame.src = url;
 
@@ -435,11 +498,48 @@
    * Blocked site: message + 5 s ring countdown, then a new tab
    * ---------------------------------------------------------------- */
 
-  function showBlocked(url) {
+  // The host page's CSP refuses the frame: explain it and let the user choose.
+  function showCspCard(c, target) {
+    const card = el("div", "blocked");
+    card.setAttribute("role", "status");
+    const inner = el("div", "card");
+
+    const badge = el("div", "badge");
+    badge.appendChild(icon(ICON_SHIELD));
+
+    const title = el("div", "title", t("blockedCspTitle"));
+    const sub = el("div", "sub", t("blockedCspText"));
+
+    const actions = el("div", "actions");
+    actions.append(
+      makeButton({
+        label: t("blockedCspOpenTab"),
+        paths: ICON_OPEN,
+        text: t("blockedCspOpenTab"),
+        className: "primary",
+        onClick: () => expandGlance(target),
+      }),
+      makeButton({
+        label: t("blockedCancel"),
+        text: t("blockedCancel"),
+        onClick: () => closeGlance(),
+      })
+    );
+
+    inner.append(badge, title, sub, actions);
+    card.appendChild(inner);
+    c.view.appendChild(card);
+  }
+
+  function showBlocked(url, opts = {}) {
     const c = current;
     if (!c || c.blocked) return;
     c.blocked = true;
     const target = url || c.url;
+    if (opts.csp) {
+      showCspCard(c, target);
+      return;
+    }
     let left = COUNTDOWN_SECONDS;
 
     const card = el("div", "blocked");
@@ -506,6 +606,15 @@
     if (!msg) return;
     if (msg.type === "glance-close-request") closeGlance();
     else if (msg.type === "glance-blocked") showBlocked(msg.url);
-    else if (msg.type === "glance-url" && current) current.setUrl(msg.url);
+    else if (msg.type === "glance-url" && current) {
+      current.setUrl(msg.url);
+      current.sawUrl = true;
+      current.retry = null; // the page we asked for has answered
+    }
+    else if (msg.type === "glance-nav" && current) {
+      current.retry = null; // a fresh click starts a new attempt
+      navTry = { url: msg.url, at: Date.now() };
+      maybeBlockedNav();
+    }
   });
 })();

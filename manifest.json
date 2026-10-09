@@ -1,7 +1,7 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "__MSG_extName__",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "icons": {
@@ -23,22 +23,20 @@
     }
   },
   "permissions": [
-    "scripting",
     "storage",
     "clipboardWrite",
     "webRequest",
     "webRequestBlocking",
-    "theme"
-  ],
-  "host_permissions": [
+    "theme",
     "<all_urls>"
   ],
   "background": {
     "scripts": [
       "background.js"
-    ]
+    ],
+    "persistent": true
   },
-  "action": {
+  "browser_action": {
     "default_title": "__MSG_extName__",
     "default_icon": "icons/icon.svg",
     "default_popup": "options.html"
