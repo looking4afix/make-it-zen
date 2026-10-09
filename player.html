@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="player.css" />
+    <title>Make it Zen</title>
+  </head>
+  <body>
+    <main id="players">
+      <details id="playersBox" class="box" open>
+        <summary>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          <span data-i18n="playersTitle"></span>
+          <span id="count" class="count"></span>
+        </summary>
+        <div id="list"></div>
+        <div id="empty" class="empty" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="17.5" cy="16" r="2.5" /></svg>
+          <strong data-i18n="playerEmpty"></strong>
+          <span data-i18n="playerEmptyHint"></span>
+        </div>
+      </details>
+    </main>
+
+    <details id="settings" class="box">
+      <summary>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+        <span data-i18n="settingsTitle"></span>
+      </summary>
+      <div class="settings-body">
+        <label class="row">
+          <input type="checkbox" id="copyEnabled" />
+          <span data-i18n="optCopyEnabled"></span>
+        </label>
+        <label class="row">
+          <input type="checkbox" id="glanceEnabled" />
+          <span data-i18n="optGlanceEnabled"></span>
+        </label>
+        <label class="row">
+          <input type="checkbox" id="mediaEnabled" />
+          <span data-i18n="optMediaEnabled"></span>
+        </label>
+        <label class="row">
+          <input type="checkbox" id="backCloses" />
+          <span data-i18n="optBackCloses"></span>
+        </label>
+        <label class="field">
+          <span data-i18n="optModifier"></span>
+          <select id="glanceModifier">
+            <option value="alt" data-i18n="optModAlt"></option>
+            <option value="ctrl" data-i18n="optModCtrl"></option>
+            <option value="shift" data-i18n="optModShift"></option>
+            <option value="meta" data-i18n="optModMeta"></option>
+          </select>
+        </label>
+        <label class="field">
+          <span data-i18n="optSize"></span>
+          <span class="range">
+            <input type="range" id="glanceSize" min="50" max="98" step="1" />
+            <output id="sizeOut"></output>
+          </span>
+        </label>
+        <p class="hint" data-i18n="optShortcutHint"></p>
+      </div>
+    </details>
+
+    <script src="options.js"></script>
+    <script src="player.js"></script>
+  </body>
+</html>

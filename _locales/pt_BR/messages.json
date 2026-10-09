@@ -1,0 +1,116 @@
+{
+  "extName": {
+    "message": "Make it Zen"
+  },
+  "extDescription": {
+    "message": "Toques inspirados no Zen para o Firefox: copie a URL da aba com um atalho (com confirmação rápida) e visualize links em um overlay Glance."
+  },
+  "cmdCopyDesc": {
+    "message": "Copiar a URL da aba ativa"
+  },
+  "toastCopied": {
+    "message": "URL copiada"
+  },
+  "glanceClose": {
+    "message": "Fechar (Esc)"
+  },
+  "glanceExpand": {
+    "message": "Abrir em nova aba"
+  },
+  "glanceOpenTab": {
+    "message": "Abrir aba"
+  },
+  "blockedTitle": {
+    "message": "Este site não pode ser visualizado aqui"
+  },
+  "blockedCountdown": {
+    "message": "Abrindo em uma nova aba em $SECONDS$s",
+    "placeholders": {
+      "seconds": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "blockedOpenNow": {
+    "message": "Abrir agora"
+  },
+  "blockedCancel": {
+    "message": "Cancelar"
+  },
+  "optCopyEnabled": {
+    "message": "Ativar o atalho de copiar URL"
+  },
+  "optGlanceEnabled": {
+    "message": "Ativar a pré-visualização Glance de links"
+  },
+  "optModifier": {
+    "message": "Gatilho do Glance (tecla + clique em um link)"
+  },
+  "optModAlt": {
+    "message": "Alt / Option"
+  },
+  "optModCtrl": {
+    "message": "Ctrl"
+  },
+  "optModShift": {
+    "message": "Shift"
+  },
+  "optModMeta": {
+    "message": "Meta / Command"
+  },
+  "optSize": {
+    "message": "Tamanho do painel Glance"
+  },
+  "optShortcutHint": {
+    "message": "Para mudar o atalho de copiar: about:addons, ícone de engrenagem, Gerenciar atalhos de extensões."
+  },
+  "optBackCloses": {
+    "message": "Alt+Esquerda fecha novas abas e o Glance (botão Voltar do mouse, se mapeado para Alt+Esquerda)"
+  },
+  "cmdSidebarDesc": {
+    "message": "Abrir/fechar a barra lateral de players"
+  },
+  "playerEmpty": {
+    "message": "Nada tocando"
+  },
+  "playerEmptyHint": {
+    "message": "Áudio e vídeo das suas abas aparecem aqui."
+  },
+  "playerPlay": {
+    "message": "Tocar"
+  },
+  "playerPause": {
+    "message": "Pausar"
+  },
+  "playerPrev": {
+    "message": "Anterior"
+  },
+  "playerNext": {
+    "message": "Próxima"
+  },
+  "playerMute": {
+    "message": "Silenciar"
+  },
+  "playerUnmute": {
+    "message": "Reativar som"
+  },
+  "playerVolume": {
+    "message": "Volume"
+  },
+  "playerSeek": {
+    "message": "Posição"
+  },
+  "playerGoToTab": {
+    "message": "Ir para a aba"
+  },
+  "optMediaEnabled": {
+    "message": "Barra lateral de players: acompanhar mídia tocando nas abas"
+  },
+  "settingsTitle": {
+    "message": "Configurações"
+  },
+  "playersTitle": {
+    "message": "Players"
+  }
+}

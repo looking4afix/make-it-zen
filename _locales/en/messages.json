@@ -1,0 +1,116 @@
+{
+  "extName": {
+    "message": "Make it Zen"
+  },
+  "extDescription": {
+    "message": "Zen-inspired touches for Firefox: copy the tab URL with a shortcut (with a quick confirmation) and preview links in a Glance overlay."
+  },
+  "cmdCopyDesc": {
+    "message": "Copy the active tab's URL"
+  },
+  "toastCopied": {
+    "message": "URL copied"
+  },
+  "glanceClose": {
+    "message": "Close (Esc)"
+  },
+  "glanceExpand": {
+    "message": "Open in new tab"
+  },
+  "glanceOpenTab": {
+    "message": "Open tab"
+  },
+  "blockedTitle": {
+    "message": "This site can't be previewed here"
+  },
+  "blockedCountdown": {
+    "message": "Opening in a new tab in $SECONDS$s",
+    "placeholders": {
+      "seconds": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "blockedOpenNow": {
+    "message": "Open now"
+  },
+  "blockedCancel": {
+    "message": "Cancel"
+  },
+  "optCopyEnabled": {
+    "message": "Enable the copy-URL shortcut"
+  },
+  "optGlanceEnabled": {
+    "message": "Enable Glance link previews"
+  },
+  "optModifier": {
+    "message": "Glance trigger (modifier + click on a link)"
+  },
+  "optModAlt": {
+    "message": "Alt / Option"
+  },
+  "optModCtrl": {
+    "message": "Ctrl"
+  },
+  "optModShift": {
+    "message": "Shift"
+  },
+  "optModMeta": {
+    "message": "Meta / Command"
+  },
+  "optSize": {
+    "message": "Glance panel size"
+  },
+  "optShortcutHint": {
+    "message": "To change the copy shortcut: about:addons, gear icon, Manage Extension Shortcuts."
+  },
+  "optBackCloses": {
+    "message": "Alt+Left closes new tabs and Glance (mouse Back button, if mapped to Alt+Left)"
+  },
+  "cmdSidebarDesc": {
+    "message": "Toggle the players sidebar"
+  },
+  "playerEmpty": {
+    "message": "Nothing playing"
+  },
+  "playerEmptyHint": {
+    "message": "Audio and video from your tabs will show up here."
+  },
+  "playerPlay": {
+    "message": "Play"
+  },
+  "playerPause": {
+    "message": "Pause"
+  },
+  "playerPrev": {
+    "message": "Previous"
+  },
+  "playerNext": {
+    "message": "Next"
+  },
+  "playerMute": {
+    "message": "Mute"
+  },
+  "playerUnmute": {
+    "message": "Unmute"
+  },
+  "playerVolume": {
+    "message": "Volume"
+  },
+  "playerSeek": {
+    "message": "Position"
+  },
+  "playerGoToTab": {
+    "message": "Go to tab"
+  },
+  "optMediaEnabled": {
+    "message": "Players sidebar: track media playing in tabs"
+  },
+  "settingsTitle": {
+    "message": "Settings"
+  },
+  "playersTitle": {
+    "message": "Players"
+  }
+}

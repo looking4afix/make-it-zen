@@ -1,0 +1,12 @@
+{
+  "name": "make-it-zen",
+  "version": "0.7.2",
+  "private": true,
+  "license": "CC0-1.0",
+  "description": "Zen-inspired features for Firefox: copy tab URL shortcut with toast, and Glance link previews.",
+  "scripts": {
+    "lint": "web-ext lint --source-dir .",
+    "build": "web-ext build --source-dir . --artifacts-dir dist --overwrite-dest --ignore-files package.json package-lock.json node_modules dist README.md",
+    "run": "web-ext run --source-dir ."
+  }
+}

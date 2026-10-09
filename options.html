@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="options.css" />
+    <title>Make it Zen</title>
+  </head>
+  <body>
+    <main>
+      <label class="row">
+        <input type="checkbox" id="copyEnabled" />
+        <span data-i18n="optCopyEnabled"></span>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="glanceEnabled" />
+        <span data-i18n="optGlanceEnabled"></span>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="mediaEnabled" />
+        <span data-i18n="optMediaEnabled"></span>
+      </label>
+
+      <label class="row">
+        <input type="checkbox" id="backCloses" />
+        <span data-i18n="optBackCloses"></span>
+      </label>
+
+      <label class="field">
+        <span data-i18n="optModifier"></span>
+        <select id="glanceModifier">
+          <option value="alt" data-i18n="optModAlt"></option>
+          <option value="ctrl" data-i18n="optModCtrl"></option>
+          <option value="shift" data-i18n="optModShift"></option>
+          <option value="meta" data-i18n="optModMeta"></option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span data-i18n="optSize"></span>
+        <span class="range">
+          <input type="range" id="glanceSize" min="50" max="98" step="1" />
+          <output id="sizeOut"></output>
+        </span>
+      </label>
+
+      <p class="hint" data-i18n="optShortcutHint"></p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>
