@@ -7,6 +7,8 @@ const DEFAULTS = {
   glanceSize: 85,
   backCloses: true,
   mediaEnabled: true,
+  sessionAccess: true,
+  showReleaseNotes: true,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -21,6 +23,8 @@ async function load() {
   $("glanceEnabled").checked = !!s.glanceEnabled;
   $("backCloses").checked = !!s.backCloses;
   $("mediaEnabled").checked = !!s.mediaEnabled;
+  $("sessionAccess").checked = !!s.sessionAccess;
+  $("showReleaseNotes").checked = !!s.showReleaseNotes;
   $("glanceModifier").value = s.glanceModifier;
   $("glanceSize").value = s.glanceSize;
   $("sizeOut").textContent = `${s.glanceSize}%`;
@@ -36,10 +40,12 @@ function save() {
     glanceSize: size,
     backCloses: $("backCloses").checked,
     mediaEnabled: $("mediaEnabled").checked,
+    sessionAccess: $("sessionAccess").checked,
+    showReleaseNotes: $("showReleaseNotes").checked,
   });
 }
 
-for (const id of ["copyEnabled", "glanceEnabled", "glanceModifier", "glanceSize", "backCloses", "mediaEnabled"]) {
+for (const id of ["copyEnabled", "glanceEnabled", "glanceModifier", "glanceSize", "backCloses", "mediaEnabled", "sessionAccess", "showReleaseNotes"]) {
   $(id).addEventListener("input", save);
   $(id).addEventListener("change", save);
 }

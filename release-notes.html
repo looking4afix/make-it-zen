@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Make it Zen: what's new</title>
+    <style>
+      html { background: #ffffff; }
+      body {
+        max-width: 42rem; margin: 0 auto; padding: 3rem 1.5rem 4rem;
+        color: #000000; background: #ffffff;
+        font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      h1, h2 { font-weight: 650; line-height: 1.25; }
+      h1 { font-size: 1.9rem; margin: 0 0 .25rem; }
+      h2 { font-size: 1.35rem; margin: 2.75rem 0 .5rem; }
+      h1 a, h2 a { color: #0060df; text-decoration: underline; }
+      h1 a:hover, h2 a:hover { color: #003eaa; }
+      p.sub { margin: 0 0 1.5rem; color: #000000; }
+      ul { margin: .5rem 0 0; padding-left: 1.25rem; }
+      li { margin: .35rem 0; }
+      footer { margin-top: 3.5rem; font-size: .9rem; }
+      footer a { color: #0060df; }
+    </style>
+  </head>
+  <body>
+    <h1><a href="https://github.com/looking4afix/make-it-zen/releases/tag/v0.8.1">Make it Zen 0.8.1</a></h1>
+    <p class="sub">Make it Zen was updated. Here is what changed.</p>
+    <ul>
+      <li><strong>Players:</strong> in a narrow sidebar the volume slider no longer spills out of the card. It now appears above the speaker button while you hover it.</li>
+      <li><strong>Glance:</strong> new setting, <em>Share my sign-in with Glance previews</em> (experimental, on by default). Firefox keeps a site's cookies apart when it is shown inside another site, so a preview can look signed out. Click inside the preview and Firefox may ask to let the site use its cookies; if you allow it, the sign-in is available from then on: a link you click opens signed in, and a click anywhere else reloads the preview once.</li>
+      <li><strong>This page:</strong> it opens after every update. You can turn that off in the settings.</li>
+      <li><strong>Firefox for Android</strong> is no longer listed as supported: the sidebar, Alt+click and the keyboard shortcuts are desktop features.</li>
+    </ul>
+
+    <h2><a href="https://github.com/looking4afix/make-it-zen/releases/tag/v0.8.0">0.8.0</a></h2>
+    <ul>
+      <li>Glance now opens sites that refuse to be embedded (YouTube, Instagram, Facebook and others), including sites that use a service worker.</li>
+      <li>Links clicked inside the Glance preview keep working when the page you are on has a strict security policy.</li>
+      <li>Long titles in the sidebar player scroll only while the pointer is over them and return to the start when it leaves.</li>
+      <li>Removed experimental settings and debug logging.</li>
+    </ul>
+
+    <footer>
+      <a href="https://addons.mozilla.org/en-US/firefox/addon/make-it-zen/">Make it Zen on Firefox Add-ons</a>
+      ·
+      <a href="https://github.com/looking4afix/make-it-zen">Source on GitHub</a>
+    </footer>
+  </body>
+</html>

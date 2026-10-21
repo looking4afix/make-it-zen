@@ -188,7 +188,7 @@ function buildCard(key) {
   refs.next = button(t("playerNext"), "next", () => send(key, "next"));
   group.append(refs.prev, refs.toggle, refs.next);
 
-  const vol = el("div", "group");
+  const vol = el("div", "group volgroup");
   refs.mute = button(t("playerMute"), "volume", () => send(key, "mute"));
   refs.volume = el("input", "vol");
   refs.volume.type = "range";
@@ -197,7 +197,10 @@ function buildCard(key) {
   refs.volume.step = "0.01";
   refs.volume.setAttribute("aria-label", t("playerVolume"));
   refs.volume.addEventListener("input", () => send(key, "volume", Number(refs.volume.value)));
-  vol.append(refs.mute, refs.volume);
+  // The slider sits in a wrapper so a narrow card can turn it into a popup (player.css).
+  const pop = el("span", "volpop");
+  pop.append(refs.volume);
+  vol.append(refs.mute, pop);
 
   controls.append(group, vol);
   node.append(top, time, controls);

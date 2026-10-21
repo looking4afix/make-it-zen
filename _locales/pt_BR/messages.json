@@ -121,5 +121,14 @@
   },
   "blockedCspOpenTab": {
     "message": "Abrir em nova aba"
+  },
+  "optSessionAccess": {
+    "message": "Compartilhar meu login com as pré-visualizações do Glance (experimental)"
+  },
+  "optSessionAccessHint": {
+    "message": "O Firefox mantém os cookies de um site separados quando ele aparece dentro de outro, então a pré-visualização pode parecer deslogada. Clique dentro dela e o Firefox pode perguntar se o site pode usar seus cookies; se você permitir, a pré-visualização recarrega já logada."
+  },
+  "optShowReleaseNotes": {
+    "message": "Mostrar as novidades após uma atualização"
   }
 }

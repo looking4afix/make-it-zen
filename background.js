@@ -11,6 +11,8 @@ const DEFAULTS = {
   glanceSize: 85,
   backCloses: true,
   mediaEnabled: true,
+  sessionAccess: true,
+  showReleaseNotes: true,
 };
 
 // Console output is visible in about:debugging -> This Firefox -> Make it Zen -> Inspect.
@@ -451,6 +453,17 @@ browser.tabs.onRemoved.addListener((tabId) => {
 });
 
 /* ------------------------------------------------------------------ *
+ * What's new: opened once after every update (never on a fresh install)
+ * ------------------------------------------------------------------ */
+
+browser.runtime.onInstalled.addListener(async ({ reason }) => {
+  if (reason !== "update") return;
+  const s = await getSettings().catch(() => DEFAULTS);
+  if (!s.showReleaseNotes) return;
+  browser.tabs.create({ url: browser.runtime.getURL("release-notes.html"), active: false });
+});
+
+/* ------------------------------------------------------------------ *
  * Messages from the content scripts
  * ------------------------------------------------------------------ */
 
@@ -520,6 +533,11 @@ async function handleMessage(msg, sender) {
       });
       await clearState(tab.id);
       return { ok: true };
+    }
+
+    case "debug": {
+      log("content", `tab ${tab.id}`, msg.where, ...(msg.args || []));
+      return undefined;
     }
 
     case "opener-check": {

@@ -37,6 +37,61 @@
       );
     }
 
+    // Firefox keeps a site's cookies apart when it is framed by another site, so the preview
+    // can look signed out. On the first click inside the preview (a click is required), ask
+    // Firefox to let the site use its own cookies here; Firefox may show its prompt. If it is
+    // granted, the page is fetched again so it comes back signed in (unless the click was on a
+    // link: that navigation is already under way and later loads will have the cookies).
+    if (isGlanceFrame()) {
+      let enabled = true;
+      let tried = false;
+      const trace = (...args) =>
+        browser.runtime
+          .sendMessage({ type: "debug", where: "storage-access " + location.hostname, args: args.map(String) })
+          .catch(() => {});
+      const hasApi = typeof document.requestStorageAccess === "function";
+      browser.storage.sync
+        .get({ sessionAccess: true })
+        .then(async (s) => {
+          enabled = !!s.sessionAccess;
+          let has = "n/a";
+          try {
+            if (hasApi) has = String(await document.hasStorageAccess());
+          } catch (err) {
+            has = "error " + (err && err.name);
+          }
+          trace("frame ready", "api=" + hasApi, "enabled=" + enabled, "hasAccess=" + has);
+        })
+        .catch(() => {});
+      if (hasApi) {
+        window.addEventListener(
+          "pointerdown",
+          async (e) => {
+            const onLink = e.composedPath().some((n) => n && n.localName === "a" && n.hasAttribute("href"));
+            trace("pointerdown", "link=" + onLink, "enabled=" + enabled, "alreadyTried=" + tried);
+            if (tried || !enabled) return;
+            tried = true;
+            try {
+              if (await document.hasStorageAccess()) {
+                trace("already allowed");
+                return;
+              }
+              await document.requestStorageAccess();
+              if (onLink) {
+                trace("granted (click was a link, not reloading)");
+              } else {
+                trace("granted, reloading the frame");
+                location.reload();
+              }
+            } catch (err) {
+              trace("refused:", err && err.name, err && err.message);
+            }
+          },
+          true
+        );
+      }
+    }
+
     document.addEventListener("keydown", (e) => {
       if (e.defaultPrevented || !isGlanceFrame()) return;
       if (e.key === "Escape" || isBackKey(e)) {

@@ -121,5 +121,14 @@
   },
   "blockedCspOpenTab": {
     "message": "Open in new tab"
+  },
+  "optSessionAccess": {
+    "message": "Share my sign-in with Glance previews (experimental)"
+  },
+  "optSessionAccessHint": {
+    "message": "Firefox keeps a site's cookies apart when it is shown inside another site, so previews can look signed out. Click inside a preview and Firefox may ask to let the site use its cookies; if you allow it, the preview reloads signed in."
+  },
+  "optShowReleaseNotes": {
+    "message": "Show what's new after an update"
   }
 }
