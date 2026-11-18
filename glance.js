@@ -3,13 +3,12 @@
 /*
  * Zenify content script.
  *  - Top frame: Glance (modifier + click on a link opens it in an overlay)
- *    and the blocked-site countdown.
+ *    and the blocked-site card.
  *  - Glance frame (recognised by its window name): relays Escape so the
  *    overlay can be closed while the previewed page has focus.
  */
 (() => {
   const FRAME_PREFIX = "zenify-glance-";
-  const COUNTDOWN_SECONDS = 5;
   const isGlanceFrame = () => String(window.name).startsWith(FRAME_PREFIX);
   const t = (key, ...subs) => browser.i18n.getMessage(key, subs) || key;
 
@@ -234,9 +233,6 @@
     return true;
   }
 
-  const RING_R = 34;
-  const RING_C = 2 * Math.PI * RING_R;
-
   const CSS = `
     :host { all: initial; }
     .wrap {
@@ -306,18 +302,6 @@
       padding: 24px; box-sizing: border-box; background: var(--bg); text-align: center;
     }
     .card { display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 380px; }
-    .ring { position: relative; width: 84px; height: 84px; }
-    .ring svg { width: 84px; height: 84px; display: block; }
-    .ring circle { fill: none; stroke-width: 5; }
-    .track { stroke: var(--field-hover); }
-    .bar {
-      stroke: var(--accent); stroke-linecap: round;
-      transform: rotate(-90deg); transform-origin: 50% 50%;
-      stroke-dasharray: ${RING_C.toFixed(2)}; stroke-dashoffset: 0;
-      animation: zring linear forwards;
-    }
-    @keyframes zring { to { stroke-dashoffset: ${RING_C.toFixed(2)}; } }
-    .num { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; font-weight: 650; }
     .title { font-size: 16px; font-weight: 650; }
     .sub { color: var(--muted); font-size: 13px; }
     .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
@@ -514,7 +498,7 @@
     const prevOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
 
-    current = { host, wrap, view, frame, url, onKey, onCsp, prevOverflow, setUrl, timer: null, blocked: false, retry: null, sawUrl: false };
+    current = { host, wrap, view, frame, url, onKey, onCsp, prevOverflow, setUrl, blocked: false, retry: null, sawUrl: false };
     document.documentElement.appendChild(host);
     frame.src = url;
 
@@ -526,7 +510,6 @@
     const c = current;
     current = null;
 
-    if (c.timer) clearInterval(c.timer);
     window.removeEventListener("keydown", c.onKey, true);
     document.removeEventListener("securitypolicyviolation", c.onCsp, true);
     document.documentElement.style.overflow = c.prevOverflow;
@@ -550,27 +533,36 @@
   }
 
   /* ---------------------------------------------------------------- *
-   * Blocked site: message + 5 s ring countdown, then a new tab
+   * Blocked site: say what happened and let the user choose
    * ---------------------------------------------------------------- */
 
-  // The host page's CSP refuses the frame: explain it and let the user choose.
-  function showCspCard(c, target) {
+  const ICON_BLOCKED = ["M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z", "M5.6 5.6l12.8 12.8"];
+
+  // Nothing opens on its own: the user picks "Open in new tab" or "Cancel".
+  //  - csp: the page you are on forbids other sites inside it (its own CSP).
+  //  - otherwise: the site refused to be framed or could not be reached.
+  function showBlocked(url, opts = {}) {
+    const c = current;
+    if (!c || c.blocked) return;
+    c.blocked = true;
+    const target = url || c.url;
+
     const card = el("div", "blocked");
     card.setAttribute("role", "status");
     const inner = el("div", "card");
 
     const badge = el("div", "badge");
-    badge.appendChild(icon(ICON_SHIELD));
+    badge.appendChild(icon(opts.csp ? ICON_SHIELD : ICON_BLOCKED));
 
-    const title = el("div", "title", t("blockedCspTitle"));
-    const sub = el("div", "sub", t("blockedCspText"));
+    const title = el("div", "title", t(opts.csp ? "blockedCspTitle" : "blockedTitle"));
+    const sub = el("div", "sub", t(opts.csp ? "blockedCspText" : "blockedText"));
 
     const actions = el("div", "actions");
     actions.append(
       makeButton({
-        label: t("blockedCspOpenTab"),
+        label: t("blockedOpenTab"),
         paths: ICON_OPEN,
-        text: t("blockedCspOpenTab"),
+        text: t("blockedOpenTab"),
         className: "primary",
         onClick: () => expandGlance(target),
       }),
@@ -584,77 +576,6 @@
     inner.append(badge, title, sub, actions);
     card.appendChild(inner);
     c.view.appendChild(card);
-  }
-
-  function showBlocked(url, opts = {}) {
-    const c = current;
-    if (!c || c.blocked) return;
-    c.blocked = true;
-    const target = url || c.url;
-    if (opts.csp) {
-      showCspCard(c, target);
-      return;
-    }
-    let left = COUNTDOWN_SECONDS;
-
-    const card = el("div", "blocked");
-    card.setAttribute("role", "status");
-    const inner = el("div", "card");
-
-    const ring = el("div", "ring");
-    const svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("viewBox", "0 0 84 84");
-    const track = document.createElementNS(NS, "circle");
-    track.setAttribute("class", "track");
-    const bar = document.createElementNS(NS, "circle");
-    bar.setAttribute("class", "bar");
-    for (const circle of [track, bar]) {
-      circle.setAttribute("cx", "42");
-      circle.setAttribute("cy", "42");
-      circle.setAttribute("r", String(RING_R));
-      svg.appendChild(circle);
-    }
-    bar.style.animationDuration = `${COUNTDOWN_SECONDS}s`;
-    const num = el("div", "num", String(left));
-    ring.append(svg, num);
-
-    const title = el("div", "title", t("blockedTitle"));
-    const sub = el("div", "sub", t("blockedCountdown", String(left)));
-
-    const actions = el("div", "actions");
-    actions.append(
-      makeButton({
-        label: t("blockedOpenNow"),
-        text: t("blockedOpenNow"),
-        className: "primary",
-        onClick: () => {
-          if (c.timer) clearInterval(c.timer);
-          c.timer = null;
-          expandGlance(target);
-        },
-      }),
-      makeButton({
-        label: t("blockedCancel"),
-        text: t("blockedCancel"),
-        onClick: () => closeGlance(),
-      })
-    );
-
-    inner.append(ring, title, sub, actions);
-    card.appendChild(inner);
-    c.view.appendChild(card);
-
-    c.timer = setInterval(() => {
-      left -= 1;
-      if (left <= 0) {
-        clearInterval(c.timer);
-        c.timer = null;
-        expandGlance(target);
-        return;
-      }
-      num.textContent = String(left);
-      sub.textContent = t("blockedCountdown", String(left));
-    }, 1000);
   }
 
   browser.runtime.onMessage.addListener((msg) => {

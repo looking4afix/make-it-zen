@@ -9,7 +9,7 @@
       body {
         max-width: 42rem; margin: 0 auto; padding: 3rem 1.5rem 4rem;
         color: #000000; background: #ffffff;
-        font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+        font: 16px/1.6 Arial, "Liberation Sans", Arimo, Helvetica, sans-serif;
       }
       h1, h2 { font-weight: 650; line-height: 1.25; }
       h1 { font-size: 1.9rem; margin: 0 0 .25rem; }
@@ -17,6 +17,19 @@
       h1 a, h2 a { color: #0060df; text-decoration: underline; }
       h1 a:hover, h2 a:hover { color: #003eaa; }
       p.sub { margin: 0 0 1.5rem; color: #000000; }
+      /* Version and feedback links share one line; the header is a size container so the
+         separator after the version can go away once the links no longer fit beside it. */
+      header.top {
+        container-type: inline-size;
+        display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .6rem; margin: 0 0 .25rem;
+      }
+      header.top h1 { margin: 0; }
+      .sep { color: #6f6f7d; font-weight: 400; margin-left: .45rem; }
+      p.feedback { margin: 0; font-size: 1.05rem; font-weight: 600; }
+      p.feedback a { color: #0060df; text-decoration: underline; }
+      p.feedback a:hover { color: #003eaa; }
+      p.feedback .bar { color: #6f6f7d; font-weight: 400; margin: 0 .4rem; }
+      @container (max-width: 32.5rem) { .sep { display: none; } }
       ul { margin: .5rem 0 0; padding-left: 1.25rem; }
       li { margin: .35rem 0; }
       footer { margin-top: 3.5rem; font-size: .9rem; }
@@ -24,8 +37,21 @@
     </style>
   </head>
   <body>
-    <h1><a href="https://github.com/looking4afix/make-it-zen/releases/tag/v0.8.1">Make it Zen 0.8.1</a></h1>
-    <p class="sub">Make it Zen was updated. Here is what changed.</p>
+    <header class="top">
+      <h1><a href="https://github.com/looking4afix/make-it-zen/releases/tag/v0.8.2">Make it Zen 0.8.2</a><span class="sep" aria-hidden="true">|</span></h1>
+      <p class="feedback">
+        <a href="https://github.com/looking4afix/make-it-zen/discussions/new?category=ideas">Suggest an idea</a><span class="bar" aria-hidden="true">|</span><a href="https://github.com/looking4afix/make-it-zen/issues/new?template=bug_report.yml">Report a bug</a>
+      </p>
+    </header>
+    <p class="sub">Make it Zen was updated! Here is what changed:</p>
+    <ul>
+      <li><strong>Players:</strong> each card has a ✕ button. It pauses that media and hides the card; the card comes back as soon as the media plays again. If a page refuses to pause (some live streams), the card returns after a few seconds.</li>
+      <li><strong>Players:</strong> new “Close paused” button in the list header hides every paused player at once. Like the ✕, each one comes back when it plays again.</li>
+      <li><strong>Players:</strong> WhatsApp Web voice messages leave the list when they finish playing, instead of staying at 0:00.</li>
+      <li><strong>Glance:</strong> when a site can’t be previewed, the card now explains why and lets you choose <em>Open in new tab</em> or <em>Cancel</em>. The link no longer opens by itself after a countdown.</li>
+    </ul>
+
+    <h2><a href="https://github.com/looking4afix/make-it-zen/releases/tag/v0.8.1">0.8.1</a></h2>
     <ul>
       <li><strong>Players:</strong> in a narrow sidebar the volume slider no longer spills out of the card. It now appears above the speaker button while you hover it.</li>
       <li><strong>Glance:</strong> new setting, <em>Share my sign-in with Glance previews</em> (experimental, on by default). Firefox keeps a site's cookies apart when it is shown inside another site, so a preview can look signed out. Click inside the preview and Firefox may ask to let the site use its cookies; if you allow it, the sign-in is available from then on: a link you click opens signed in, and a click anywhere else reloads the preview once.</li>
@@ -45,6 +71,10 @@
       <a href="https://addons.mozilla.org/en-US/firefox/addon/make-it-zen/">Make it Zen on Firefox Add-ons</a>
       ·
       <a href="https://github.com/looking4afix/make-it-zen">Source on GitHub</a>
+      ·
+      <a href="https://github.com/looking4afix/make-it-zen/discussions/new?category=ideas">Suggest an idea</a>
+      ·
+      <a href="https://github.com/looking4afix/make-it-zen/issues/new?template=bug_report.yml">Report a bug</a>
     </footer>
   </body>
 </html>

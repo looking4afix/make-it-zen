@@ -23,17 +23,8 @@
   "blockedTitle": {
     "message": "Este site não pode ser visualizado aqui"
   },
-  "blockedCountdown": {
-    "message": "Abrindo em uma nova aba em $SECONDS$s",
-    "placeholders": {
-      "seconds": {
-        "content": "$1",
-        "example": "5"
-      }
-    }
-  },
-  "blockedOpenNow": {
-    "message": "Abrir agora"
+  "blockedText": {
+    "message": "O site recusou abrir dentro da pré-visualização, ou não foi possível carregá-lo. Você pode abrir o link em uma nova aba."
   },
   "blockedCancel": {
     "message": "Cancelar"
@@ -104,6 +95,9 @@
   "playerGoToTab": {
     "message": "Ir para a aba"
   },
+  "playerClose": {
+    "message": "Parar e ocultar (volta quando tocar de novo)"
+  },
   "optMediaEnabled": {
     "message": "Barra lateral de players: acompanhar mídia tocando nas abas"
   },
@@ -119,7 +113,7 @@
   "blockedCspText": {
     "message": "A política de segurança (CSP) dela impede que outros sites abram dentro dela. Abra o link em uma nova aba."
   },
-  "blockedCspOpenTab": {
+  "blockedOpenTab": {
     "message": "Abrir em nova aba"
   },
   "optSessionAccess": {
@@ -130,5 +124,11 @@
   },
   "optShowReleaseNotes": {
     "message": "Mostrar as novidades após uma atualização"
+  },
+  "playersCloseAll": {
+    "message": "Fechar pausados"
+  },
+  "playersCloseAllHint": {
+    "message": "Ocultar todos os players pausados (cada um volta quando tocar de novo)"
   }
 }

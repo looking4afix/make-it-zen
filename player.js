@@ -11,6 +11,7 @@ const ICONS = {
   next: [{ d: "M16 6h2v12h-2zM14.5 12L5 18V6z" }],
   volume: [{ d: "M4 9v6h4l5 4V5L8 9z" }, { d: "M16.5 8.5a5 5 0 0 1 0 7", line: true }],
   muted: [{ d: "M4 9v6h4l5 4V5L8 9z" }, { d: "M16 9.5l5 5M21 9.5l-5 5", line: true }],
+  close: [{ d: "M7 7l10 10M17 7L7 17", line: true }],
   note: [{ d: "M9 18V5l11-2v13", line: true }, { d: "M9 18a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0z", line: true }, { d: "M20 16a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0z", line: true }],
 };
 
@@ -148,7 +149,13 @@ function buildCard(key) {
   refs.titleTk = makeTicker("title");
   refs.subTk = makeTicker("sub");
   refs.meta.append(refs.titleTk.tick, refs.subTk.tick);
-  top.append(refs.thumb, refs.meta);
+  // Pauses and hides the card; it comes back when this media plays again.
+  const close = button(t("playerClose"), "close", (e) => {
+    e.stopPropagation();
+    remove(key);
+    send(key, "dismiss");
+  }, "close");
+  top.append(refs.thumb, refs.meta, close);
 
   const time = el("div", "time");
   refs.time = time;
@@ -287,9 +294,24 @@ function reorder() {
 }
 
 const count = document.getElementById("count");
+const closeAll = document.getElementById("closeAll");
+closeAll.title = t("playersCloseAllHint");
+const pausedKeys = () => [...cards.values()].filter((c) => c.player.paused).map((c) => c.player.key);
 const updateCount = () => {
   count.textContent = cards.size ? String(cards.size) : "";
+  closeAll.hidden = pausedKeys().length === 0;
 };
+
+// Same as the ✕ on every paused card. Lives in the <summary>: keep the click from
+// collapsing the list.
+closeAll.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  for (const key of pausedKeys()) {
+    remove(key);
+    send(key, "dismiss");
+  }
+});
 
 function upsert(player) {
   let c = cards.get(player.key);

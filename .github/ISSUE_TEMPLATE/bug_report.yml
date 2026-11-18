@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in Make it Zen doesn't work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Ideas and questions go to [Discussions](https://github.com/looking4afix/make-it-zen/discussions) instead.
+  - type: dropdown
+    id: feature
+    attributes:
+      label: Feature
+      options:
+        - Glance (link preview)
+        - Players sidebar
+        - Copy URL (Ctrl+Shift+C)
+        - Back shortcut (Alt+Left)
+        - Settings / what's-new page
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open https://...
+        2. Alt+click a link
+        3. ...
+  - type: input
+    id: site
+    attributes:
+      label: Website
+      description: The site where it happens, if it is specific to one.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Make it Zen version (about:addons) and Firefox version (Help → About Firefox), plus the fork name if you use one.
+      placeholder: Make it Zen 0.8.2, Firefox 160.0, Windows 11
+    validations:
+      required: true
+  - type: checkboxes
+    id: clean
+    attributes:
+      label: Other extensions
+      options:
+        - label: It also happens with other extensions disabled (or in a new Firefox profile).

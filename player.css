@@ -38,6 +38,12 @@ body {
 }
 .fav[hidden] { display: none; }
 .art svg { width: 22px; height: 22px; }
+button.close {
+  width: 26px; height: 26px; flex: none; align-self: flex-start; margin: -4px -4px 0 0;
+  background: transparent; color: var(--muted);
+}
+button.close:hover { background: var(--field); color: var(--text); }
+button.close svg { width: 14px; height: 14px; }
 .meta { min-width: 0; flex: 1; }
 .title { font-weight: 650; }
 .sub { color: var(--muted); }
@@ -131,6 +137,12 @@ input[type="range"] { accent-color: var(--accent); height: 16px; margin: 0; }
 }
 .box[open] > summary svg { transform: none; }
 .count { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+button.closeall {
+  width: auto; height: 26px; margin-left: auto; padding: 0 10px;
+  font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted);
+}
+button.closeall:hover { color: var(--text); }
+button.closeall[hidden] { display: none; }
 #playersBox > #list { padding-top: 4px; }
 #settings {
   flex: none; margin: 0 10px 10px; background: var(--card); border-radius: 20px;

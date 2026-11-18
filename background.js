@@ -368,7 +368,8 @@ async function mediaUpdate(raw, tab, frameId) {
   const key = playerKey(tab.id, frameId, id);
 
   if (raw.removed) {
-    if (players.delete(key)) notifySidebar({ type: "media-push", removed: key });
+    const prev = players.get(key);
+    if (players.delete(key) && !(prev && prev.dismissed)) notifySidebar({ type: "media-push", removed: key });
   } else {
     const player = {
       key,
@@ -391,11 +392,40 @@ async function mediaUpdate(raw, tab, frameId) {
       hasNext: !!raw.hasNext,
       at: Date.now(),
     };
+    keepDismissed(players.get(key), player);
     players.set(key, player);
-    notifySidebar({ type: "media-push", player });
+    if (!player.dismissed) notifySidebar({ type: "media-push", player });
   }
   savePlayers();
   updateBadge();
+}
+
+/*
+ * Closing a card (✕ in the sidebar) pauses the media and hides the card until that
+ * media plays again. While the pause is on its way the player is "pending": updates
+ * that still say playing are the old state, not the user pressing play. Once a paused
+ * update arrives it is "hidden", and the next playing update brings the card back.
+ * A page that refuses the scripted pause (live streams...) gets its card back after
+ * PAUSE_GRACE_MS, so nothing keeps playing without a card.
+ */
+const PAUSE_GRACE_MS = 3000;
+
+function keepDismissed(prev, player) {
+  if (!prev || !prev.dismissed) return;
+  if (player.paused) {
+    player.dismissed = "hidden";
+    player.dismissedAt = prev.dismissedAt;
+  } else if (prev.dismissed === "pending" && Date.now() - prev.dismissedAt < PAUSE_GRACE_MS) {
+    player.dismissed = "pending";
+    player.dismissedAt = prev.dismissedAt;
+  }
+}
+
+function dismissPlayer(p) {
+  p.dismissed = p.paused ? "hidden" : "pending";
+  p.dismissedAt = Date.now();
+  notifySidebar({ type: "media-push", removed: p.key });
+  savePlayers();
 }
 
 function dropPlayers(tabId, frameId) {
@@ -403,7 +433,7 @@ function dropPlayers(tabId, frameId) {
   for (const [key, p] of players) {
     if (p.tabId === tabId && (frameId === undefined || p.frameId === frameId)) {
       players.delete(key);
-      notifySidebar({ type: "media-push", removed: key });
+      if (!p.dismissed) notifySidebar({ type: "media-push", removed: key });
       changed = true;
     }
   }
@@ -418,10 +448,10 @@ async function mediaList() {
   for (const tabId of new Set([...players.values()].map((p) => p.tabId))) {
     browser.tabs.sendMessage(tabId, { type: "media-resync" }).catch(() => {});
   }
-  return { players: [...players.values()] };
+  return { players: [...players.values()].filter((p) => !p.dismissed) };
 }
 
-const MEDIA_ACTIONS = ["play", "pause", "seek", "volume", "mute", "prev", "next", "focus"];
+const MEDIA_ACTIONS = ["play", "pause", "seek", "volume", "mute", "prev", "next", "focus", "dismiss"];
 
 async function mediaControl(msg) {
   await playersReady;
@@ -437,8 +467,14 @@ async function mediaControl(msg) {
     }
     return { ok: true };
   }
+  if (msg.action === "dismiss") {
+    const wasPlaying = !p.paused;
+    dismissPlayer(p);
+    if (!wasPlaying) return { ok: true };
+  }
+  const action = msg.action === "dismiss" ? "pause" : msg.action;
   await browser.tabs
-    .sendMessage(p.tabId, { type: "media-cmd", id: p.id, action: msg.action, value: msg.value }, { frameId: p.frameId })
+    .sendMessage(p.tabId, { type: "media-cmd", id: p.id, action, value: msg.value }, { frameId: p.frameId })
     .catch(() => {});
   return { ok: true };
 }
@@ -470,6 +506,11 @@ browser.runtime.onInstalled.addListener(async ({ reason }) => {
 async function handleMessage(msg, sender) {
   const tab = sender.tab;
   log("message", msg && msg.type, "tab", tab && tab.id);
+
+  if (msg.type === "debug") {
+    log(tab ? `content tab ${tab.id}` : "extension page", msg.where, ...(msg.args || []));
+    return undefined;
+  }
 
   // From the sidebar page (an extension page, so no tab).
   if (!tab) {
@@ -533,11 +574,6 @@ async function handleMessage(msg, sender) {
       });
       await clearState(tab.id);
       return { ok: true };
-    }
-
-    case "debug": {
-      log("content", `tab ${tab.id}`, msg.where, ...(msg.args || []));
-      return undefined;
     }
 
     case "opener-check": {

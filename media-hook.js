@@ -27,6 +27,11 @@
     { host: /(^|\.)spotify\.com$/, prev: '[data-testid="control-button-skip-back"]', next: '[data-testid="control-button-skip-forward"]' },
   ];
 
+  // Sites whose players rewind to 0:00 when they end (so `ended` is false again):
+  // a finished player stays hidden until it plays again (WhatsApp voice messages).
+  const HIDE_WHEN_FINISHED = /(^|\.)web\.whatsapp\.com$/;
+  const hideFinished = HIDE_WHEN_FINISHED.test(location.hostname);
+
   const infoOf = new WeakMap();
   const byId = new Map();
   let nextId = 1;
@@ -81,7 +86,7 @@
     }
     if (!info.eligible) return;
 
-    if (el.ended || (!el.currentSrc && !el.srcObject)) {
+    if (el.ended || (info.finished && el.paused) || (!el.currentSrc && !el.srcObject)) {
       if (info.announced) {
         info.announced = false;
         post({ id: info.id, removed: true });
@@ -108,7 +113,11 @@
   function onEvent(el, type) {
     const info = infoOf.get(el);
     if (!info) return;
-    if (type === "play" || type === "playing") lastPlayed = el;
+    if (type === "play" || type === "playing") {
+      lastPlayed = el;
+      info.finished = false;
+    }
+    if (type === "ended" && hideFinished) info.finished = true;
     if (type === "timeupdate") {
       if (!el.paused && Date.now() - info.sent >= HEARTBEAT) schedule(el, 0);
       return;
@@ -119,7 +128,7 @@
 
   function track(el) {
     if (!(el instanceof HTMLMediaElement) || infoOf.has(el)) return;
-    const info = { id: String(nextId++), eligible: false, announced: false, timer: null, sent: 0 };
+    const info = { id: String(nextId++), eligible: false, announced: false, finished: false, timer: null, sent: 0 };
     infoOf.set(el, info);
     byId.set(info.id, typeof WeakRef === "function" ? new WeakRef(el) : { deref: () => el });
     for (const type of EVENTS) el.addEventListener(type, () => onEvent(el, type));

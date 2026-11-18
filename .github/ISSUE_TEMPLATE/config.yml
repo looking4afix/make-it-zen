@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Suggest an idea
+    url: https://github.com/looking4afix/make-it-zen/discussions/new?category=ideas
+    about: Ideas and feature requests go to Discussions.
+  - name: Ask a question
+    url: https://github.com/looking4afix/make-it-zen/discussions/new?category=q-a
+    about: Questions about using Make it Zen.

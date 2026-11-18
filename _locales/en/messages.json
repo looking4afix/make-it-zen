@@ -23,17 +23,8 @@
   "blockedTitle": {
     "message": "This site can't be previewed here"
   },
-  "blockedCountdown": {
-    "message": "Opening in a new tab in $SECONDS$s",
-    "placeholders": {
-      "seconds": {
-        "content": "$1",
-        "example": "5"
-      }
-    }
-  },
-  "blockedOpenNow": {
-    "message": "Open now"
+  "blockedText": {
+    "message": "The site refused to open inside the preview, or it could not be reached. You can open the link in a new tab instead."
   },
   "blockedCancel": {
     "message": "Cancel"
@@ -104,6 +95,9 @@
   "playerGoToTab": {
     "message": "Go to tab"
   },
+  "playerClose": {
+    "message": "Stop and hide (it returns when it plays again)"
+  },
   "optMediaEnabled": {
     "message": "Players sidebar: track media playing in tabs"
   },
@@ -119,7 +113,7 @@
   "blockedCspText": {
     "message": "Its security policy (CSP) stops other sites from opening inside it. Open the link in a new tab instead."
   },
-  "blockedCspOpenTab": {
+  "blockedOpenTab": {
     "message": "Open in new tab"
   },
   "optSessionAccess": {
@@ -130,5 +124,11 @@
   },
   "optShowReleaseNotes": {
     "message": "Show what's new after an update"
+  },
+  "playersCloseAll": {
+    "message": "Close paused"
+  },
+  "playersCloseAllHint": {
+    "message": "Hide every paused player (each one returns when it plays again)"
   }
 }
